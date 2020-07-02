@@ -1,0 +1,34 @@
+---
+- hosts: all
+  tasks:
+
+    - name: Run update of apt
+      become: true
+      apt:
+        upgrade: dist
+        update_cache: yes
+        cache_valid_time: 3600
+    - name: Install Nginx Web Server
+      apt: name=nginx state=latest
+      become: yes
+    - name: Start nginx
+      service:
+          name: nginx
+          state: started
+      become: yes
+    - name: Copy the nginx config file and restart nginx
+      copy:
+        src: nginx/site.cfg
+        dest: /etc/nginx/sites-available/site.cfg
+      become: yes
+    - name: Create symlink
+      file:
+        src: /etc/nginx/sites-available/site.cfg
+        dest: /etc/nginx/sites-enabled/default
+        state: link
+      become: yes
+    - name: Restart nginx
+      service:
+        name: nginx
+        state: restarted
+      become: yes

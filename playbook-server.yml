@@ -1,0 +1,27 @@
+---
+- hosts: all
+  tasks:
+
+    - name: Run the equivalent of "apt-get update" as a separate step
+      become: true
+      apt:
+        upgrade: dist
+        update_cache: yes
+        cache_valid_time: 3600
+    - name: Install common python packages
+      become: true
+      apt:
+        name:
+          - python3-pip
+    - name: copy the content of the web site
+      copy:
+        src: src/
+        dest: /home/vagrant/site
+    - name: Install packages
+      command: "pip3 install -r /home/vagrant/site/requirements.txt"
+      run_once: true
+    - name: Run app
+      command: "/home/vagrant/.local/bin/gunicorn myapp:app -w 2 --threads 2 -b 0.0.0.0:8080 --daemon"
+      args:
+        chdir: /home/vagrant/site/
+      run_once: true
