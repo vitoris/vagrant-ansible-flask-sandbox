@@ -17,11 +17,28 @@
       copy:
         src: src/
         dest: /home/vagrant/site
+    - name: Ansible check file exists.
+      stat:
+        path: /home/vagrant/site/requirements.txt
+      register: rf
+    - debug:
+        msg: "File exists..."
+      when: rf.stat.exists
+    - debug:
+        msg: "File not found"
+      when: rf.stat.exists == False
     - name: Install packages
       command: "pip3 install -r /home/vagrant/site/requirements.txt"
       run_once: true
+      when: rf.stat.exists
     - name: Run app
       command: "/home/vagrant/.local/bin/gunicorn myapp:app -w 2 --threads 2 -b 0.0.0.0:8080 --daemon"
       args:
         chdir: /home/vagrant/site/
       run_once: true
+
+    - name: Check server status
+      uri:
+        url: "http://localhost:8080"
+        return_content: yes
+        status_code: 200
